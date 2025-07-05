@@ -1,6 +1,10 @@
 FROM jupyter/tensorflow-notebook:latest
 
+USER root
+
 RUN apt update -y && apt install awscli -y
+
+USER ${NB_UID}
 
 WORKDIR /app
 
