@@ -1,3 +1,15 @@
+- name: Setup Docker credential on jenkins_server
+  hosts: jenkins_server
+  become: yes
+  roles:
+    - role: docker_secure
+  vars:
+    ansible_user: ubuntu
+    gpg_key_config_path: /home/ubuntu/gpg_key_config
+    gpg_key_name: JenkinsDocker
+    gpg_home: "/home/ubuntu/.gnupg"
+    pass_store: "/home/ubuntu/.password-store"
+
 - name: Bootstrap Jenkins Server
   hosts: jenkins_server
   become: yes
@@ -5,7 +17,18 @@
     - group_vars/all.yml
   roles:
     - role: jenkins_server
+
+- name: Setup Docker credential helper on mlops_server
+  hosts: mlops_server
+  become: yes
+  roles:
     - role: docker_secure
+  vars:
+    ansible_user: ubuntu
+    gpg_key_config_path: /tmp/gpg_key_config
+    gpg_key_name: MLOpsDocker
+    gpg_home: "/home/{{ ansible_user }}/.gnupg"
+    pass_store: "/home/{{ ansible_user }}/.password-store"
 
 - name: Setup MLOps Server
   hosts: mlops_server
@@ -13,7 +36,6 @@
   vars_files:
     - group_vars/all.yml
   roles:
-    - role: docker_secure
     - role: mlops_server
 
 - name: Configure GitHub Secrets

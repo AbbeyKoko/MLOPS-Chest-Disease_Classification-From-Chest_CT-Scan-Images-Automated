@@ -7,42 +7,55 @@
     update_cache: true
   become: true
 
+- name: Ensure GPG config directory exists
+  file:
+    path: "{{ gpg_home }}"
+    state: directory
+    owner: ubuntu
+    group: ubuntu
+    mode: '0700'
+  become: true
+
 - name: Create GPG batch config file
   copy:
-    dest: /tmp/gpg_key_config
+    dest: "{{ gpg_key_config_path }}"
     content: |
       %no-protection
       Key-Type: RSA
       Key-Length: 2048
       Subkey-Type: RSA
       Subkey-Length: 2048
-      Name-Real: JenkinsDocker
+      Name-Real: {{ gpg_key_name }}
       Expire-Date: 0
       %commit
+    owner: ubuntu
+    group: ubuntu
     mode: '0600'
   become: true
 
-- name: Generate GPG key (if not already exists)
+- name: Generate GPG key (if not exists)
   shell: |
-    gpg --batch --gen-key /tmp/gpg_key_config
+    gpg --batch --gen-key {{ gpg_key_config_path }}
   args:
-    creates: /root/.gnupg/pubring.kbx
+    creates: "{{ gpg_home }}/pubring.kbx"
   become: true
+  become_user: "{{ ansible_user }}"
 
-- name: Get GPG key ID for JenkinsDocker
+- name: Get GPG key ID for {{ gpg_key_name }}
   shell: |
-    gpg --list-keys --with-colons JenkinsDocker | awk -F: '/^pub/ { print $5 }'
+    gpg --list-keys --with-colons {{ gpg_key_name }} | awk -F: '/^pub/ { print $5 }'
   register: gpg_key_id
   changed_when: false
   become: true
+  become_user: "{{ ansible_user }}"
 
 - name: Initialize pass with GPG key
   shell: |
-    export GNUPGHOME=/root/.gnupg
     pass init "{{ gpg_key_id.stdout }}"
   args:
-    creates: /root/.password-store
+    creates: "{{ pass_store }}"
   become: true
+  become_user: "{{ ansible_user }}"
 
 - name: Ensure ~/.docker directory exists
   file:
@@ -55,7 +68,7 @@
 
 - name: Configure Docker to use pass as credential store
   copy:
-    dest: /home/{{ ansible_user }}/.docker/config.json
+    dest: "/home/{{ ansible_user }}/.docker/config.json"
     content: |
       {
         "credsStore": "pass"
@@ -64,5 +77,3 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
   become: true
-  vars:
-    ansible_user: "ubuntu"
