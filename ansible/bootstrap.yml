@@ -39,8 +39,8 @@
     - role: mlops_server
 
 - name: Configure GitHub Secrets
-  hosts: github
-  become: yes
+  hosts: localhost
+  connection: local
   vars_files:
     - group_vars/all.yml
   roles:

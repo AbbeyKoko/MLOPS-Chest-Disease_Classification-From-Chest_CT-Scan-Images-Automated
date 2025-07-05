@@ -183,8 +183,10 @@ jenkins-runtime-key.pem
 policy.json
 
 #ansible
+# group_vars/
 all.yml
-all copy.yml
+all copy*.yml
+# all copy 2.yml
 vault_pass.txt
 *.pem
 *.key

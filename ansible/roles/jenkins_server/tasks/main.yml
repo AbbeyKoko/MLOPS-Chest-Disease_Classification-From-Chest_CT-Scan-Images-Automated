@@ -144,11 +144,15 @@
   ignore_errors: true
   changed_when: false
 
+# - name: Delete Jenkins job if it exists
+#   shell: |
+#     java -jar /tmp/jenkins-cli.jar -s {{ jenkins_host }} -auth {{ jenkins_user }}:{{ jenkins_password }} delete-job {{ jenkins_pipeline }}
+#   when: job_check.rc == 0
+
 - name: Create Jenkins job if it doesn't exist
   shell: |
     java -jar /tmp/jenkins-cli.jar -s {{ jenkins_host }} -auth {{ jenkins_user }}:{{ jenkins_password }} create-job {{ jenkins_pipeline }} < /tmp/sample-pipeline-job.xml
   when: job_check.rc != 0
-
 
 - name: Wait for Jenkins to be available
   uri:
@@ -218,13 +222,12 @@
   become: false
   register: encrypted_token
 
-- name: Ensure jenkins_api_token line exists in group_vars/all.yml
-  ansible.builtin.lineinfile:
-    path: ../../../group_vars/all.yml
-    regexp: '^jenkins_api_token:'
-    line: "jenkins_api_token: {{ jenkins_api_tokens }}"
-    create: yes
-    mode: '0600'
+- name: Update jenkins_api_token in group_vars/all.yml using replace
+  ansible.builtin.replace:
+    path: "{{ playbook_dir }}/group_vars/all.yml"
+    regexp: '^jenkins_api_token:*'
+    replace: "jenkins_api_token: {{ jenkins_api_tokens }}"
+    backup: yes
   delegate_to: localhost
   become: false
 
@@ -280,6 +283,32 @@
     name: jenkins
     state: restarted
 
+
+- name: Get last build number before triggering
+  uri:
+    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/api/json"
+    user: "{{ jenkins_user }}"
+    password: "{{ jenkins_api_tokens }}"
+    force_basic_auth: yes
+    return_content: yes
+  register: job_info_before
+  changed_when: false
+
+
+- name: Set last build number before triggering
+  set_fact:
+    last_build_number_before: "{{ job_info_before.json.lastBuild.number | default(0) | int }}"
+
+- name: Abort running build if in progress
+  uri:
+    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/{{ last_build_number_before }}/stop"
+    method: POST
+    user: "{{ jenkins_user }}"
+    password: "{{ jenkins_api_tokens }}"
+    force_basic_auth: yes
+  when: job_info_before.json.building | default(false)
+  register: abort_response
+
 - name: Trigger Jenkins job build
   uri:
     url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/build"
@@ -290,6 +319,36 @@
     status_code: 201
   register: trigger_result
 
-- name: Show trigger result
-  debug:
-    var: trigger_result.status
+- name: Wait for 30 seconds to allow build to start
+  ansible.builtin.pause:
+    seconds: 30
+
+- name: Wait for Jenkins build to start
+  uri:
+    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/{{ (last_build_number_before | default(0) + 1) }}/api/json"
+    user: "{{ jenkins_user }}"
+    password: "{{ jenkins_api_tokens }}"
+    force_basic_auth: yes
+    return_content: yes
+    status_code: [200, 404]
+  register: build_info
+  retries: 30
+  delay: 90
+  until: build_info.status == 200 and build_info.json.building is defined
+
+- name: Wait for Jenkins build to complete
+  uri:
+    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/{{ last_build_number_before + 1 }}/api/json"
+    user: "{{ jenkins_user }}"
+    password: "{{ jenkins_api_tokens }}"
+    force_basic_auth: yes
+    return_content: yes
+  register: build_info
+  retries: 40
+  delay: 15
+  until: build_info.json.building == false
+
+- name: Fail if build did not succeed
+  fail:
+    msg: "Jenkins build failed or was aborted"
+  when: build_info.json.result != 'SUCCESS'
