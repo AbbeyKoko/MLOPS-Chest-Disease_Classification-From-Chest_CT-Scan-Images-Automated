@@ -1,0 +1,12 @@
+- name: Template docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: /home/ubuntu/docker-compose.yml
+    owner: ubuntu
+    group: ubuntu
+    mode: '0644'
+
+- name: Run docker-compose up
+  shell: docker-compose up -d
+  args:
+    chdir: /home/ubuntu

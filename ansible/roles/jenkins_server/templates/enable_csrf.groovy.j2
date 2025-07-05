@@ -1,0 +1,7 @@
+import jenkins.model.*
+import hudson.security.csrf.DefaultCrumbIssuer
+
+def instance = Jenkins.getInstance()
+instance.setCrumbIssuer(new DefaultCrumbIssuer(true))
+instance.save()
+println("CSRF protection enabled.")

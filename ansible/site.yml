@@ -1,0 +1,23 @@
+- name: Bootstrap Jenkins Server
+  hosts: jenkins_server
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: jenkins_server
+
+- name: Setup MLOps Server
+  hosts: mlops_server
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: mlops_server
+
+- name: Configure GitHub Secrets
+  hosts: github
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: github

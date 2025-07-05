@@ -1,0 +1,7 @@
+version: "3"
+services:
+  application:
+    image: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}"
+    ports:
+      - "8081:8081"
+    restart: always

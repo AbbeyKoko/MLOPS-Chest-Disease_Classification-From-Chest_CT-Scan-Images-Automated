@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"flake8.enabled": false,
+		"notebook.lineNumbers": "on",
+		"notebook.output.scrolling": true,
+		"notebook.stickyScroll.enabled": true,
+		"ansible.python.interpreterPath": "/Users/tumelo/miniconda3/envs/Py-DLChest/bin/python"
+	}
+}

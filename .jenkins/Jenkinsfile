@@ -1,0 +1,73 @@
+pipeline {
+  agent any
+  environment {
+    AWS_REGION = credentials("AWS_REGION")
+    ECR_REPOSITORY = credentials("ECR_REPOSITORY")
+    AWS_ACCOUNT_ID = credentials("AWS_ACCOUNT_ID")
+    AWS_ACCESS_KEY_ID = credentials("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_ACCESS_KEY = credentials("AWS_SECRET_ACCESS_KEY")
+    IMAGE_TAG = credentials("IMAGE_TAG")
+  }
+
+  stages{
+      stage("Continuous Integration: Lint & Test") {
+        steps{
+            echo "Linting and testing the code.."
+            sh 'echo "Lint placeholder - replace with flake8 or pylint"'
+            sh 'echo "Unit test placeholder - replace with pytest or unittest"'
+        }
+      }
+
+      stage("Docker: Login to AWS ECR") {
+        steps {
+          echo "Logging into AWS ECR"
+          sh """
+            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+            aws configure set region $AWS_REGION
+            aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REPOSITORY
+          """
+        }
+      }
+
+      stage("Docker: Build Image") {
+        steps{
+          echo "Building DOcker Image"
+          sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG} ."
+        }
+      }
+
+      stage("Docker: Push Image to ECR") {
+        steps{
+            echo "Deploying to EC2..."
+            sshagent(["ssh_key"]) {
+              sh """
+                ssh -o StrictHostKeyChecking=no ubuntu@44.215.220.137 <<EOF
+                  set -e
+                  cd /home/ubuntu
+                  curl -O https://raw.githubusercontent.com/AbbeyKoko/MLOPS-Chest-Disease_Classification-From-Chest_CT-Scan-Images/refs/heads/main/docker-compose.yml
+                  export IMAGE_NAME=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}
+                  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}
+                  docker compose pull
+                  docker compose up -d
+                EOF
+              """
+            }
+        }
+      }
+
+      post{
+          always {
+            echo "Cleaning up Docker..."
+            sh 'docker system prune -f'
+          }
+          failure {
+            echo "Build or deployment failed"
+          }
+          success {
+            echo "Deployment completed successfully"
+          }
+      }
+
+  }
+}

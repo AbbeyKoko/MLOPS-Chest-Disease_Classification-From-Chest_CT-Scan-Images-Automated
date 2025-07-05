@@ -1,0 +1,7 @@
+- name: Login to AWS ECR
+  shell: |
+    aws ecr get-login-password --region {{ aws_region }} | docker login \
+      --username AWS \
+      --password-stdin {{ aws_account_id }}.dkr.ecr.{{ aws_region }}.amazonaws.com
+  register: ecr_login
+  changed_when: "'Login Succeeded' in ecr_login.stdout"

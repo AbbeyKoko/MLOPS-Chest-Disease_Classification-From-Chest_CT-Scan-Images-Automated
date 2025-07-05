@@ -1,0 +1,25 @@
+- name: Select Groovy script to toggle CSRF
+  set_fact:
+    csrf_template: "{{ '../templates/enable_csrf.groovy.j2' if jenkins_csrf_enabled else '../templates/disable_csrf.groovy.j2' }}"
+
+- name: Render Groovy script to toggle CSRF
+  template:
+    src: "{{ csrf_template }}"
+    dest: /tmp/toggle_csrf.groovy
+
+- name: Run Groovy script to toggle CSRF
+  shell: |
+    curl -s -X POST "{{ jenkins_host }}/scriptText" \
+      --user "{{ jenkins_user }}:{{ jenkins_password }}" \
+      --data-urlencode "script=@/tmp/toggle_csrf.groovy"
+  register: toggle_csrf_result
+  failed_when: toggle_csrf_result.rc != 0 or 'Exception' in toggle_csrf_result.stdout
+
+# - name: Debug Groovy script output
+#   debug:
+#     var: toggle_csrf_result.stdout
+
+- name: Cleanup temp Groovy script
+  file:
+    path: /tmp/toggle_csrf.groovy
+    state: absent

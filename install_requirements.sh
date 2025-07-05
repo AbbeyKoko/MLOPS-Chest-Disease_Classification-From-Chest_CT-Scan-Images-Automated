@@ -1,0 +1,1 @@
+conda create --name "Py-DLChest" python=3.9.* -y -q && source ~/.zshrc && conda init zsh && conda activate Py-DLChest && pip install -U pip pip-tools

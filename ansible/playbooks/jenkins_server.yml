@@ -1,0 +1,7 @@
+- name: Bootstrap Jenkins Server
+  hosts: jenkins_server
+  become: true
+  vars_files:
+    - ../group_vars/all.yml
+  roles:
+    - jenkins_server

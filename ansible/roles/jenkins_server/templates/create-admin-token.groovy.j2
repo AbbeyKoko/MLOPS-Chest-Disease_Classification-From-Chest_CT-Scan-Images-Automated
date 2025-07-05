@@ -1,0 +1,29 @@
+import jenkins.model.*
+import hudson.model.*
+import jenkins.security.*
+import jenkins.security.apitoken.*
+import hudson.security.*
+
+def username = "{{ jenkins_user }}"
+def tokenName = "{{ token_name }}"
+
+// Get user
+def user = User.get(username, false, [:])
+if (user == null) {
+    throw new Exception("User not found: ${username}")
+}
+
+def prop = user.getProperty(ApiTokenProperty.class)
+
+// Delete existing token(s) with same name
+def existing = prop.apiStore.getTokenList().findAll { it.name == tokenName }
+existing.each { token ->
+    prop.apiStore.revokeToken(token.uuid)
+    println "Deleted token with UUID: ${token.uuid}"
+}
+
+// Create new token
+def result = prop.apiStore.generateNewToken(tokenName)
+user.save()
+
+println "New token value: ${result.plainValue}"  // <-- Capture this!
