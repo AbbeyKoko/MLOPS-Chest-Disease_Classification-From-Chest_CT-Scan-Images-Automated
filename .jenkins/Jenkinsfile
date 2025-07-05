@@ -55,19 +55,19 @@ pipeline {
             }
         }
       }
-
-      post{
-          always {
-            echo "Cleaning up Docker..."
-            sh 'docker system prune -f'
-          }
-          failure {
-            echo "Build or deployment failed"
-          }
-          success {
-            echo "Deployment completed successfully"
-          }
-      }
-
   }
+
+  post{
+      always {
+        echo "Cleaning up Docker..."
+        sh 'docker system prune -f'
+      }
+      failure {
+        echo "Build or deployment failed"
+      }
+      success {
+        echo "Deployment completed successfully"
+      }
+  }
+
 }
