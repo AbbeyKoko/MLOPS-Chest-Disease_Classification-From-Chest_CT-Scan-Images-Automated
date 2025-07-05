@@ -49,7 +49,7 @@ pipeline {
         sshagent(["ssh_key"]) {
           sh '''
             ANSIBLE_HOST_KEY_CHECKING=False \
-            ansible-playbook -i inventory.ini ansible/playbooks/deploy_mlops.yml --vault-password-file vault_pass.txt
+            ansible-playbook -i inventory.ini deploy_mlops.yml --vault-password-file vault_pass.txt
           '''
         }
       }
