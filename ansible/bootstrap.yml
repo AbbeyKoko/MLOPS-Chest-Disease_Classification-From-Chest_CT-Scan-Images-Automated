@@ -5,7 +5,7 @@
     - group_vars/all.yml
   roles:
     - role: jenkins_server
-    - role: docker-secure
+    - role: docker_secure
 
 - name: Setup MLOps Server
   hosts: mlops_server
@@ -13,7 +13,7 @@
   vars_files:
     - group_vars/all.yml
   roles:
-    - role: docker-secure
+    - role: docker_secure
     - role: mlops_server
 
 - name: Configure GitHub Secrets

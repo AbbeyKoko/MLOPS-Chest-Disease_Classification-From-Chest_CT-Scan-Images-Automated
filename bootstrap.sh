@@ -154,4 +154,4 @@ VAULT_PASS_FILE="vault_pass.txt"
 
 ansible-vault encrypt group_vars/all.yml --vault-password-file vault_pass.txt
 ANSIBLE_HOST_KEY_CHECKING=False \
-ansible-playbook -i inventory.ini playbooks/bootstrap.yml --vault-password-file vault_pass.txt
+ansible-playbook -i inventory.ini bootstrap.yml --vault-password-file vault_pass.txt
