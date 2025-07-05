@@ -40,11 +40,11 @@ pipeline {
       steps {
         sh '''
           # Start a background heartbeat loop
-          (while true; do echo "[HEARTBEAT] Still building..."; sleep 60; done) &
+          (while true; do echo "[HEARTBEAT] $(date): Still building..."; sleep 60; done) &
           HEARTBEAT_PID=$!
 
           # Run your Docker build (with verbose output)
-          DOCKER_BUILDKIT=1 docker build --progress=plain -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .
+          DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .
 
           # Stop the heartbeat loop
           kill $HEARTBEAT_PID
