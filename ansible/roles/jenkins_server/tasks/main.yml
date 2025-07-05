@@ -309,6 +309,10 @@
   when: job_info_before.json.building | default(false)
   register: abort_response
 
+- name: Wait for 30 seconds to allow build to start
+  ansible.builtin.pause:
+    seconds: 30
+
 - name: Trigger Jenkins job build
   uri:
     url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/build"
@@ -323,9 +327,13 @@
   ansible.builtin.pause:
     seconds: 30
 
+- name: Set new build number 
+  set_fact:
+    new_build_number: "{{ (last_build_number_before | default(0) + 1) | string }}"
+
 - name: Wait for Jenkins build to start
   uri:
-    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/{{ (last_build_number_before | default(0) + 1) }}/api/json"
+    url: "{{ jenkins_host }}/job/{{ jenkins_pipeline }}/{{ new_build_number }}/api/json"
     user: "{{ jenkins_user }}"
     password: "{{ jenkins_api_tokens }}"
     force_basic_auth: yes

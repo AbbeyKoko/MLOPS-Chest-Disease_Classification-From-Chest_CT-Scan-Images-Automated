@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install -r requirements.txt
+COPY requirements.txt .
+
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt -i https://pypi.python.org/simple
 
 CMD [ "python3", "app.py" ]
