@@ -59,10 +59,8 @@ pipeline {
 
   post{
       always {
-        node {
-          echo "Cleaning up Docker..."
-          sh 'docker system prune -f'
-        }
+        echo "Cleaning up Docker..."
+        sh 'docker system prune -f'
       }
       failure {
         echo "Build or deployment failed"
