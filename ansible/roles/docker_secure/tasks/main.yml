@@ -38,7 +38,8 @@
         "credsStore": "pass"
       }
     mode: '0600'
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   become: true
-  become_user: "{{ ansible_user }}"
   vars:
-    - ansible_user: "ubuntu"
+    ansible_user: "ubuntu"
