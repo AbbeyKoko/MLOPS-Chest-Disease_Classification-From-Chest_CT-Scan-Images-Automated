@@ -4,30 +4,53 @@
       - gnupg2
       - pass
     state: present
+    update_cache: true
+  become: true
+
+- name: Create GPG batch config file
+  copy:
+    dest: /tmp/gpg_key_config
+    content: |
+      %no-protection
+      Key-Type: RSA
+      Key-Length: 2048
+      Subkey-Type: RSA
+      Subkey-Length: 2048
+      Name-Real: JenkinsDocker
+      Expire-Date: 0
+      %commit
+    mode: '0600'
   become: true
 
 - name: Generate GPG key (if not already exists)
-  command: >
-    gpg --batch --gen-key <<EOF
-    %no-protection
-    Key-Type: RSA
-    Key-Length: 2048
-    Subkey-Type: RSA
-    Subkey-Length: 2048
-    Name-Real: JenkinsDocker
-    Expire-Date: 0
-    %commit
-    EOF
+  shell: |
+    gpg --batch --gen-key /tmp/gpg_key_config
   args:
-    creates: /root/.gnupg  # skip if already exists
+    creates: /root/.gnupg/pubring.kbx
   become: true
 
-- name: Initialize pass with GPG ID
+- name: Get GPG key ID for JenkinsDocker
+  shell: |
+    gpg --list-keys --with-colons JenkinsDocker | awk -F: '/^pub/ { print $5 }'
+  register: gpg_key_id
+  changed_when: false
+  become: true
+
+- name: Initialize pass with GPG key
   shell: |
     export GNUPGHOME=/root/.gnupg
-    pass init "JenkinsDocker"
+    pass init "{{ gpg_key_id.stdout }}"
   args:
     creates: /root/.password-store
+  become: true
+
+- name: Ensure ~/.docker directory exists
+  file:
+    path: "/home/{{ ansible_user }}/.docker"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0700'
   become: true
 
 - name: Configure Docker to use pass as credential store
