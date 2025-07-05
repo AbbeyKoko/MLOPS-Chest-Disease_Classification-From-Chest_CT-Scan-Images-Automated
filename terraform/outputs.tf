@@ -4,12 +4,12 @@ output "AWS_ACCOUNT_ID" {
 }
 
 output "AWS_ACCESS_KEY_ID" {
-  value = aws_iam_access_key.terraform-user_key.id
+  value = module.terraform_user.access_key_id
   sensitive = true
 }
 
 output "AWS_SECRET_ACCESS_KEY" {
-  value = aws_iam_access_key.terraform-user_key.secret
+  value = module.terraform_user.secret_access_key
   sensitive = true
 }
 

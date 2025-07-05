@@ -1,0 +1,44 @@
+- name: Install Docker credential helper prerequisites
+  apt:
+    name:
+      - gnupg2
+      - pass
+    state: present
+  become: true
+
+- name: Generate GPG key (if not already exists)
+  command: >
+    gpg --batch --gen-key <<EOF
+    %no-protection
+    Key-Type: RSA
+    Key-Length: 2048
+    Subkey-Type: RSA
+    Subkey-Length: 2048
+    Name-Real: JenkinsDocker
+    Expire-Date: 0
+    %commit
+    EOF
+  args:
+    creates: /root/.gnupg  # skip if already exists
+  become: true
+
+- name: Initialize pass with GPG ID
+  shell: |
+    export GNUPGHOME=/root/.gnupg
+    pass init "JenkinsDocker"
+  args:
+    creates: /root/.password-store
+  become: true
+
+- name: Configure Docker to use pass as credential store
+  copy:
+    dest: /home/{{ ansible_user }}/.docker/config.json
+    content: |
+      {
+        "credsStore": "pass"
+      }
+    mode: '0600'
+  become: true
+  become_user: "{{ ansible_user }}"
+  vars:
+    - ansible_user: "ubuntu"

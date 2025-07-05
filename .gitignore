@@ -180,6 +180,7 @@ scores.json
 *.tfstate.backup
 .terraform/
 jenkins-runtime-key.pem
+policy.json
 
 #ansible
 all.yml

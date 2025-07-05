@@ -15,6 +15,12 @@ terraform {
     }
   }
 }
+module "terraform_user" {
+  source      = "./modules/iam-terraform-user"
+  user_name   = var.iam_user_name
+  group_name  = var.iam_group_name
+  policy_name = var.iam_policy_name
+}
 
 module "keypair" {
   source = "./modules/keypair"

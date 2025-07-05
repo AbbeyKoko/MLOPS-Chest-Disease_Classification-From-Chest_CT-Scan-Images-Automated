@@ -1,0 +1,8 @@
+- name: Deploy to MLOps Server
+  hosts: mlops_server
+  become: yes
+  vars_files:
+    - group_vars/all.yml
+  roles:
+    - role: docker-secure
+    - role: deploy

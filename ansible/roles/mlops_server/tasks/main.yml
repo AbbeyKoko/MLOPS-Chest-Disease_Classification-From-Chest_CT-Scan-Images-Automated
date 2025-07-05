@@ -1,8 +1,19 @@
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    force_apt_get: yes
+
 - name: Install dependencies
-  import_tasks: install_dependencies.yml
+  apt:
+    name:
+      - docker.io
+      - awscli
+      - curl
+      - unzip
+    state: present
 
-- name: Login to ECR
-  import_tasks: login_ecr.yml
-
-- name: Deploy application via docker-compose
-  import_tasks: deploy_app.yml
+- name: Install Docker Compose
+  get_url:
+    url: "https://github.com/docker/compose/releases/latest/download/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}"
+    dest: /usr/local/bin/docker-compose
+    mode: '0755'

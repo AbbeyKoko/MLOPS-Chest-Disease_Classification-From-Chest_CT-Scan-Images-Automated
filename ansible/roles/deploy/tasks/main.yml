@@ -1,0 +1,5 @@
+- name: Login to ECR
+  import_tasks: login_ecr.yml
+
+- name: Deploy application via docker-compose
+  import_tasks: deploy_app.yml

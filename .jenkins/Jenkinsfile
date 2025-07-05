@@ -1,5 +1,6 @@
 pipeline {
   agent any
+
   environment {
     AWS_REGION = credentials("AWS_REGION")
     ECR_REPOSITORY = credentials("ECR_REPOSITORY")
@@ -7,67 +8,65 @@ pipeline {
     AWS_ACCESS_KEY_ID = credentials("AWS_ACCESS_KEY_ID")
     AWS_SECRET_ACCESS_KEY = credentials("AWS_SECRET_ACCESS_KEY")
     IMAGE_TAG = credentials("IMAGE_TAG")
+    MLOPS_HOST = credentials("MLOPS_HOST")
   }
 
-  stages{
-      stage("Continuous Integration: Lint & Test") {
-        steps{
-            echo "Linting and testing the code.."
-            sh 'echo "Lint placeholder - replace with flake8 or pylint"'
-            sh 'echo "Unit test placeholder - replace with pytest or unittest"'
-        }
+  stages {
+    stage("Continuous Integration: Lint & Test") {
+      steps {
+        echo "Linting and testing the code.."
+        sh 'echo "Lint placeholder - replace with flake8 or pylint"'
+        sh 'echo "Unit test placeholder - replace with pytest or unittest"'
       }
+    }
 
-      stage("Docker: Login to AWS ECR") {
-        steps {
-          echo "Logging into AWS ECR"
-          sh """
-            aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
-            aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
-            aws configure set region $AWS_REGION
-            aws ecr get-login-password | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/
-          """
+    stage("Docker: Login to AWS ECR") {
+      steps {
+        echo "Logging into AWS ECR"
+        withEnv([
+          "AWS_ACCESS_KEY_ID=${env.AWS_ACCESS_KEY_ID}",
+          "AWS_SECRET_ACCESS_KEY=${env.AWS_SECRET_ACCESS_KEY}",
+          "AWS_REGION=${env.AWS_REGION}"
+        ]) {
+          sh 'aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID"'
+          sh 'aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY"'
+          sh 'aws configure set region "$AWS_REGION"'
+          sh 'aws ecr get-login-password | docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"'
         }
       }
+    }
 
-      stage("Docker: Build Image") {
-        steps{
-          echo "Building DOcker Image"
-          sh "docker build -t ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG} ."
-        }
+    stage("Docker: Build Image") {
+      steps {
+        echo "Building Docker Image"
+        sh 'docker build -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .'
       }
+    }
 
-      stage("Docker: Push Image to ECR") {
-        steps{
-            echo "Deploying to EC2..."
-            sshagent(["ssh_key"]) {
-              sh """
-                ssh -o StrictHostKeyChecking=no ubuntu@44.215.220.137 <<EOF
-                  set -e
-                  cd /home/ubuntu
-                  curl -O https://raw.githubusercontent.com/AbbeyKoko/MLOPS-Chest-Disease_Classification-From-Chest_CT-Scan-Images/refs/heads/main/docker-compose.yml
-                  export IMAGE_NAME=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}:${IMAGE_TAG}
-                  aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                  docker compose pull
-                  docker compose up -d
-                EOF
-              """
-            }
+    stage("Deploy with Ansible (Group Vars Driven)") {
+      steps {
+        echo "Deploying to EC2 using Ansible group_vars..."
+        sshagent(["ssh_key"]) {
+          sh '''
+            ANSIBLE_HOST_KEY_CHECKING=False \
+            ansible-playbook -i inventory.ini ansible/playbooks/deploy_mlops.yml --vault-password-file vault_pass.txt
+          '''
         }
       }
+    }
+
   }
 
-  post{
-      always {
-        echo "Cleaning up Docker..."
-        sh 'docker system prune -f'
-      }
-      failure {
-        echo "Build or deployment failed"
-      }
-      success {
-        echo "Deployment completed successfully"
-      }
+  post {
+    always {
+      echo "Cleaning up Docker..."
+      sh 'docker system prune -f'
+    }
+    failure {
+      echo "Build or Deployment failed"
+    }
+    success {
+      echo "Deployment completed successfully"
+    }
   }
-
 }
