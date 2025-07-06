@@ -56,8 +56,8 @@ pipeline {
       }
       steps {
         timeout(time: 60, unit: 'MINUTES') {
-          sh(script: '''
-            set -euo pipefail
+          sh '''
+            set -eu
 
             (while true; do echo "[HEARTBEAT] $(date): Building base dependencies image..."; sleep 60; done) &
             HEARTBEAT_PID=$!
@@ -74,7 +74,7 @@ pipeline {
 
             echo "[INFO] Pushing to ECR..."
             docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}"
-          ''', shell: '/bin/bash')
+          '''
         }
       }
     }
@@ -82,8 +82,8 @@ pipeline {
     stage('Build App Image') {
       steps {
         timeout(time: 30, unit: 'MINUTES') {
-          sh(script: '''
-            set -euo pipefail
+          sh '''
+            set -eu
 
             (while true; do echo "[HEARTBEAT] $(date): Building app image..."; sleep 60; done) &
             HEARTBEAT_PID=$!
@@ -100,7 +100,7 @@ pipeline {
 
             echo "[INFO] Pushing to ECR..."
             docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
-          ''', shell: '/bin/bash')
+          '''
         }
       }
     }
