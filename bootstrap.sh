@@ -44,7 +44,9 @@ ansible-vault decrypt group_vars/all.yml --vault-password-file vault_pass.txt
 
 declare -a tf_keys=(
   jenkins_elastic_ip
+  jenkins_private_ip
   mlops_elastic_ip
+  mlops_private_ip
   JENKINS_URL
   JENKINS_USER
   JENKINS_PASSWORD
@@ -62,7 +64,9 @@ declare -a tf_keys=(
 
 declare -a ansible_keys=(
   jenkins_elastic_ip
+  jenkins_private_ip
   mlops_elastic_ip
+  mlops_private_ip
   jenkins_host
   jenkins_user
   jenkins_password
@@ -125,8 +129,8 @@ done
 echo "group_vars/all.yml updated with top-level vars and jenkins_secrets."
 
 echo "=== Generating Ansible Inventory ==="
-JENKINS_IP=$(echo "$tf_outputs" | jq -r ".jenkins_elastic_ip.value // empty")
-RUNTIME_IP=$(echo "$tf_outputs" | jq -r ".mlops_elastic_ip.value // empty")
+JENKINS_IP=$(echo "$tf_outputs" | jq -r ".jenkins_private_ip.value // empty")
+RUNTIME_IP=$(echo "$tf_outputs" | jq -r ".mlops_private_ip.value // empty")
 PRIVATE_KEY_PATH=$(echo "$tf_outputs" | jq -r ".private_key_path.value // empty")
 
 

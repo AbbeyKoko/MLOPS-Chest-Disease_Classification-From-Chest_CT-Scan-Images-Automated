@@ -90,8 +90,16 @@ resource "aws_instance" "mlops_ec2" {
   key_name = var.key_name
   security_groups = [aws_security_group.mlops_sg.name]
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
+  availability_zone = var.availability_zone
 
+  root_block_device {
+    volume_size = 13 
+    volume_type = "gp2"
+  }
 
+  credit_specification {
+    cpu_credits = "standard"  
+  }
   tags = {
     Name = "mlops-Server"
   }

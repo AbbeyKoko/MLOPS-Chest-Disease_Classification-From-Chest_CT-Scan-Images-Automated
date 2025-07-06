@@ -39,8 +39,18 @@ output "jenkins_elastic_ip" {
   sensitive = true
 }
 
+output "jenkins_private_ip" {
+  value = module.jenkins_server.jenkins_private_ip
+  sensitive = true
+}
+
 output "mlops_elastic_ip" {
   value = module.mlops_server.mlops_elastic_ip
+  sensitive = true
+}
+
+output "mlops_private_ip" {
+  value = module.mlops_server.mlops_private_ip
   sensitive = true
 }
 

@@ -5,6 +5,9 @@ variable "instance_type" {
 variable "region" {
   type = string
 }
+variable "availability_zone" {
+  type = string
+}
 
 variable "profile" {
   type = string

@@ -6,6 +6,10 @@ variable "region" {
   type = string
 }
 
+variable "availability_zone" {
+  type = string
+}
+
 variable "profile" {
   type = string
   description = "Profile account to use"

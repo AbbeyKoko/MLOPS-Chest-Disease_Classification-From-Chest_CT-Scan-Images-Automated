@@ -35,6 +35,7 @@ module "jenkins_server" {
   source = "./modules/jenkins_server"
   instance_type = var.instance_type
   region = var.region
+  availability_zone = var.availability_zone
   key_name = module.keypair.key_name
   profile = var.profile
   aws_account_id = data.aws_caller_identity.current.account_id
@@ -48,6 +49,7 @@ module "mlops_server" {
   source = "./modules/mlops_server"
   instance_type = var.instance_type
   region = var.region
+  availability_zone = var.availability_zone
   key_name = module.keypair.key_name
   profile = var.profile
   ecr_repo = var.ecr_repo

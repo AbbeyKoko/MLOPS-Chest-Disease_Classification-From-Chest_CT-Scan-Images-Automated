@@ -90,9 +90,16 @@ resource "aws_instance" "jenkins_ec2" {
   key_name = var.key_name
   security_groups = [aws_security_group.jenkins_sg.name]
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
-  associate_public_ip_address = true
+  availability_zone = var.availability_zone
 
+  root_block_device {
+    volume_size = 16 
+    volume_type = "gp2"
+  }
 
+  credit_specification {
+    cpu_credits = "standard"  
+  }
   tags = {
     Name = "Jenkins-Server"
   }
@@ -100,7 +107,7 @@ resource "aws_instance" "jenkins_ec2" {
 
 resource "aws_eip" "jenkins_eip" {
   domain = "vpc"
-  # depends_on = [ aws_instance.jenkins_ec2 ]
+  depends_on = [ aws_instance.jenkins_ec2 ]
 }
 
 resource "aws_eip_association" "jenkins_eip_association" {

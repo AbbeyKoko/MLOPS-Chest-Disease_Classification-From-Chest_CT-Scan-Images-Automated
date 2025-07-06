@@ -2,6 +2,10 @@ variable "region" {
   type = string
   default = "eu-north-1"
 }
+variable "availability_zone" {
+  type = string
+  default = "eu-north-1a"
+}
 
 variable "instance_type" {
   type = string
