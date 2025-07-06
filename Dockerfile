@@ -7,6 +7,7 @@ RUN apt update -y && apt install -y --no-install-recommends build-essential awsc
 COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache \
+  pip install --upgrade pip && \
   pip install --no-cache-dir --prefer-binary -r requirements.txt
 
 FROM python:3.9.1-slim-buster
