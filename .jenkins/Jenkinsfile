@@ -57,6 +57,8 @@ pipeline {
       steps {
         timeout(time: 60, unit: 'MINUTES') {
           sh '''
+            #!/bin/bash
+
             set -euo pipefail
 
             (while true; do echo "[HEARTBEAT] $(date): Building base dependencies image..."; sleep 60; done) &
@@ -83,6 +85,8 @@ pipeline {
       steps {
         timeout(time: 30, unit: 'MINUTES') {
           sh '''
+            #!/bin/bash
+
             set -euo pipefail
 
             (while true; do echo "[HEARTBEAT] $(date): Building app image..."; sleep 60; done) &
