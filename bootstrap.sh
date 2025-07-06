@@ -44,9 +44,9 @@ ansible-vault decrypt group_vars/all.yml --vault-password-file vault_pass.txt
 
 declare -a tf_keys=(
   jenkins_private_ip
-  jenkins_instance_id
+  jenkins_public_ip
   mlops_private_ip
-  mlops_instance_id
+  mlops_public_ip
   JENKINS_URL
   JENKINS_USER
   JENKINS_PASSWORD
@@ -64,9 +64,9 @@ declare -a tf_keys=(
 
 declare -a ansible_keys=(
   jenkins_private_ip
-  jenkins_instance_id
+  jenkins_public_ip
   mlops_private_ip
-  mlops_instance_id
+  mlops_public_ip
   jenkins_host
   jenkins_user
   jenkins_password
@@ -132,27 +132,17 @@ done
 echo "group_vars/all.yml updated with top-level vars and jenkins_secrets."
 
 echo "=== Generating Ansible Inventory ==="
-JENKINS_ID=$(echo "$tf_outputs" | jq -r ".jenkins_instance_id.value // empty")
-RUNTIME_ID=$(echo "$tf_outputs" | jq -r ".mlops_instance_id.value // empty")
-AWS_REGION=$(echo "$tf_outputs" | jq -r ".AWS_REGION.value // empty")
+JENKINS_IP=$(echo "$tf_outputs" | jq -r ".jenkins_public_ip.value // empty")
+RUNTIME_IP=$(echo "$tf_outputs" | jq -r ".mlops_public_ip.value // empty")
+PRIVATE_KEY_PATH=$(echo "$tf_outputs" | jq -r ".private_key_path.value // empty")
 
 
 cat > inventory.ini <<EOF
 [jenkins_server]
-${JENKINS_ID} 
-
-[jenkins_server:vars]
-ansible_connection=amazon.aws.aws_ssm
-ansible_user=ubuntu
-aws_region=${AWS_REGION}
+${JENKINS_IP} ansible_user=ubuntu ansible_ssh_private_key_file=../terraform/${PRIVATE_KEY_PATH}
 
 [mlops_server]
-${RUNTIME_ID} 
-
-[mlops_server:vars]
-ansible_connection=amazon.aws.aws_ssm
-ansible_user=ubuntu
-aws_region=${AWS_REGION}
+${RUNTIME_IP} ansible_user=ubuntu ansible_ssh_private_key_file=../terraform/${PRIVATE_KEY_PATH}
 
 [github]
 localhost ansible_connection=local
@@ -171,5 +161,4 @@ VAULT_PASS_FILE="vault_pass.txt"
 
 ansible-vault encrypt group_vars/all.yml --vault-password-file vault_pass.txt
 ANSIBLE_HOST_KEY_CHECKING=False \
-OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES \
 ansible-playbook -i inventory.ini bootstrap.yml --vault-password-file vault_pass.txt

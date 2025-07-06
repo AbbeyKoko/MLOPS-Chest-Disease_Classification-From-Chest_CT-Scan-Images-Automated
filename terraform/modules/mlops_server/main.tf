@@ -23,8 +23,8 @@ resource "aws_security_group" "mlops_sg" {
   }
 
   ingress {
-    from_port = 8080
-    to_port = 8080
+    from_port = 8081
+    to_port = 8081
     protocol = "tcp"
     cidr_blocks = [ "0.0.0.0/0" ]
   }
@@ -54,7 +54,7 @@ resource "aws_iam_role" "ec2_role" {
 
 resource "aws_iam_role_policy_attachment" "ec2_attach" {
   role = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
 }
 
 

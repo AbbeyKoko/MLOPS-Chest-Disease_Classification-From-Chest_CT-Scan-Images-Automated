@@ -39,8 +39,8 @@ output "jenkins_private_ip" {
   sensitive = true
 }
 
-output "jenkins_instance_id" {
-  value = module.jenkins_server.jenkins_instance_id
+output "jenkins_public_ip" {
+  value = module.jenkins_server.jenkins_public_ip
   sensitive = true
 }
 
@@ -49,8 +49,8 @@ output "mlops_private_ip" {
   sensitive = true
 }
 
-output "mlops_instance_id" {
-  value = module.mlops_server.mlops_instance_id
+output "mlops_public_ip" {
+  value = module.mlops_server.mlops_public_ip
   sensitive = true
 }
 
