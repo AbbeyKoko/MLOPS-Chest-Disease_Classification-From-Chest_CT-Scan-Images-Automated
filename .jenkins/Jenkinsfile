@@ -57,15 +57,22 @@ pipeline {
       steps {
         timeout(time: 60, unit: 'MINUTES') {
           sh '''
+            set -euo pipefail
+
             (while true; do echo "[HEARTBEAT] $(date): Building base dependencies image..."; sleep 60; done) &
             HEARTBEAT_PID=$!
 
-            trap "kill $HEARTBEAT_PID 2>/dev/null || true" EXIT
+            cleanup() {
+              echo "Stopping heartbeat..."
+              kill $HEARTBEAT_PID 2>/dev/null || true
+            }
 
-            docker build --target base-deps -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}" .
+            trap cleanup EXIT
 
-            kill $HEARTBEAT_PID
+            echo "[INFO] Starting docker build..."
+            docker build --progress=plain --target base-deps -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}" .
 
+            echo "[INFO] Pushing to ECR..."
             docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}"
           '''
         }
@@ -76,15 +83,22 @@ pipeline {
       steps {
         timeout(time: 30, unit: 'MINUTES') {
           sh '''
+            set -euo pipefail
+
             (while true; do echo "[HEARTBEAT] $(date): Building app image..."; sleep 60; done) &
             HEARTBEAT_PID=$!
 
-            trap "kill $HEARTBEAT_PID 2>/dev/null || true" EXIT
+            cleanup() {
+              echo "Stopping heartbeat..."
+              kill $HEARTBEAT_PID 2>/dev/null || true
+            }
 
+            trap cleanup EXIT
+
+            echo "[INFO] Starting docker build..."
             docker build --progress=plain -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .
 
-            kill $HEARTBEAT_PID
-
+            echo "[INFO] Pushing to ECR..."
             docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
           '''
         }

@@ -29,6 +29,10 @@ variable "ecr_repo" {
   type = string
 }
 
+variable "ecr_repo_base" {
+  type = string
+}
+
 variable "aws_account_id" {
   description = "AWS Account ID"
   type        = string

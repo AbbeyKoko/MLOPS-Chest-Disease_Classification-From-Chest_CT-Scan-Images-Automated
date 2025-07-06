@@ -27,6 +27,10 @@ variable "ecr_repo" {
   type = string
 }
 
+variable "ecr_repo_base" {
+  type = string
+}
+
 
 variable "JENKINS_URL_PORT" {
   type = string

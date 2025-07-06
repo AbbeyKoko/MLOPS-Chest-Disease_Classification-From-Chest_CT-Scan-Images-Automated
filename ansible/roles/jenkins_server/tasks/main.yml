@@ -329,7 +329,8 @@
 
 - name: Set new build number 
   set_fact:
-    new_build_number: "{{ (last_build_number_before | default(0) + 1) | string }}"
+    new_build_number: "{{ (last_build_number_before | default('#0') | regex_replace('#', '') | int + 1 ) | string }}"
+
 
 - name: Wait for Jenkins build to start
   uri:

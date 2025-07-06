@@ -12,6 +12,21 @@ resource "aws_ecr_repository" "ecr" {
   }
 }
 
+
+resource "aws_ecr_repository" "ecr_base" {
+  name = var.ecr_repo_base
+  image_tag_mutability = "MUTABLE"
+
+  encryption_configuration {
+    encryption_type = "AES256"
+  }
+
+  tags = {
+    Name =  var.ecr_repo_base
+    Environment = "Development"
+  }
+}
+
 resource "aws_security_group" "mlops_sg" {
   name = "mlops-sg"
 

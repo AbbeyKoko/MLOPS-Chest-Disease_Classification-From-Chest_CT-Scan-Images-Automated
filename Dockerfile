@@ -1,4 +1,4 @@
-FROM python:3.9-slim-buster AS base-deps
+FROM python:3.9.1 AS base-deps
 
 WORKDIR /app
 
@@ -6,9 +6,10 @@ RUN apt update -y && apt install -y --no-install-recommends build-essential awsc
 
 COPY requirements.txt .
 
-RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache \
+  pip install --no-cache-dir --prefer-binary -r requirements.txt
 
-FROM python:3.9-slim-buster
+FROM python:3.9.1-slim-buster
 
 WORKDIR /app
 

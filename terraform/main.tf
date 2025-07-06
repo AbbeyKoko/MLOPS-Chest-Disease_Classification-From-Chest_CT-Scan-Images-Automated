@@ -53,5 +53,6 @@ module "mlops_server" {
   key_name = module.keypair.key_name
   profile = var.profile
   ecr_repo = var.ecr_repo
+  ecr_repo_base = var.ecr_repo_base
   aws_account_id = data.aws_caller_identity.current.account_id
 }
