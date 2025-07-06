@@ -7,7 +7,7 @@ output "jenkins_private_ip" {
 }
 
 output "JENKINS_URL" {
-  value = "http://${aws_eip.jenkins_eip.public_ip}:${var.JENKINS_URL_PORT}"
+  value = "http://${aws_eip.jenkins_eip.private_ip}:${var.JENKINS_URL_PORT}"
 }
 
 output "JENKINS_PIPELINE" {

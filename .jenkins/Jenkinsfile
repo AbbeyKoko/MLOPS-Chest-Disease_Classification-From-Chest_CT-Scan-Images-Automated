@@ -36,19 +36,58 @@ pipeline {
       }
     }
 
-    stage("Docker: Build Image") {
+    stage('Pull Base Image') {
       steps {
-        sh '''
-          # Start a background heartbeat loop
-          (while true; do echo "[HEARTBEAT] $(date): Still building..."; sleep 60; done) &
-          HEARTBEAT_PID=$!
+        script {
+          def baseImage = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}-base-deps:${IMAGE_TAG}"
+          sh """
+            docker pull $baseImage || echo "Base image not found, will build it."
+          """
+        }
+      }
+    }
 
-          # Run your Docker build (with verbose output)
-          DOCKER_BUILDKIT=1 docker build --no-cache --progress=plain -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .
+    stage('Build Base Image') {
+      when {
+        expression {
+          // Only build base image if not found in previous stage
+          return sh(script: "docker images -q ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPOSITORY}-base-deps:${IMAGE_TAG} || true", returnStdout: true).trim() == ""
+        }
+      }
+      steps {
+        timeout(time: 60, unit: 'MINUTES') {
+          sh '''
+            (while true; do echo "[HEARTBEAT] $(date): Building base dependencies image..."; sleep 60; done) &
+            HEARTBEAT_PID=$!
 
-          # Stop the heartbeat loop
-          kill $HEARTBEAT_PID
-        '''
+            trap "kill $HEARTBEAT_PID 2>/dev/null || true" EXIT
+
+            docker build --target base-deps -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}" .
+
+            kill $HEARTBEAT_PID
+
+            docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY-base-deps:${IMAGE_TAG}"
+          '''
+        }
+      }
+    }
+
+    stage('Build App Image') {
+      steps {
+        timeout(time: 30, unit: 'MINUTES') {
+          sh '''
+            (while true; do echo "[HEARTBEAT] $(date): Building app image..."; sleep 60; done) &
+            HEARTBEAT_PID=$!
+
+            trap "kill $HEARTBEAT_PID 2>/dev/null || true" EXIT
+
+            docker build --progress=plain -t "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG" .
+
+            kill $HEARTBEAT_PID
+
+            docker push "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG"
+          '''
+        }
       }
     }
 

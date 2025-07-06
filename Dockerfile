@@ -1,19 +1,22 @@
-FROM python:3.9.19-slim-buster
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        awscli \
-        ca-certificates \
-        curl \
-        gnupg \
-        unzip && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+FROM python:3.9-slim-buster AS base-deps
 
 WORKDIR /app
 
-COPY . /app
+RUN apt update -y && apt install -y --no-install-recommends build-essential awscli && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --no-cache-dir --prefer-binary -r requirements.txt -i https://pypi.python.org/simple
+COPY requirements.txt .
 
-CMD [ "python3", "app.py" ]
+RUN pip install --no-cache-dir --prefer-binary -r requirements.txt
+
+FROM python:3.9-slim-buster
+
+WORKDIR /app
+
+COPY --from=base-deps /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=base-deps /usr/local/bin /usr/local/bin
+
+COPY . .
+
+EXPOSE 8081
+
+CMD ["python3", "app.py"]

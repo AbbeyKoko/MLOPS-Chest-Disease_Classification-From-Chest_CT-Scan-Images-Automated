@@ -5,8 +5,15 @@
     owner: ubuntu
     group: ubuntu
     mode: '0644'
+  notify: Restart App
 
 - name: Run docker-compose up
   shell: docker-compose up -d
+  args:
+    chdir: /home/ubuntu
+
+
+- name: Restart App
+  shell: docker-compose down && docker-compose up -d
   args:
     chdir: /home/ubuntu
