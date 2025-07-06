@@ -34,23 +34,23 @@ output "private_key_path" {
   sensitive = true
 }
 
-output "jenkins_elastic_ip" {
-  value = module.jenkins_server.jenkins_elastic_ip
-  sensitive = true
-}
-
 output "jenkins_private_ip" {
   value = module.jenkins_server.jenkins_private_ip
   sensitive = true
 }
 
-output "mlops_elastic_ip" {
-  value = module.mlops_server.mlops_elastic_ip
+output "jenkins_instance_id" {
+  value = module.jenkins_server.jenkins_instance_id
   sensitive = true
 }
 
 output "mlops_private_ip" {
   value = module.mlops_server.mlops_private_ip
+  sensitive = true
+}
+
+output "mlops_instance_id" {
+  value = module.mlops_server.mlops_instance_id
   sensitive = true
 }
 

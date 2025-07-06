@@ -54,7 +54,7 @@ resource "aws_iam_role" "ec2_role" {
 
 resource "aws_iam_role_policy_attachment" "ec2_attach" {
   role = aws_iam_role.ec2_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEC2FullAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
 }
 
 
@@ -83,6 +83,10 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+data "aws_subnet" "default_subnet" {
+  default_for_az = true
+  availability_zone = var.availability_zone
+}
 
 resource "aws_instance" "jenkins_ec2" {
   ami = data.aws_ami.ubuntu.id  
@@ -90,6 +94,8 @@ resource "aws_instance" "jenkins_ec2" {
   key_name = var.key_name
   security_groups = [aws_security_group.jenkins_sg.name]
   iam_instance_profile = aws_iam_instance_profile.ec2_profile.name
+  associate_public_ip_address = true
+  subnet_id = data.aws_subnet.default_subnet.id
   availability_zone = var.availability_zone
 
   root_block_device {
@@ -105,12 +111,3 @@ resource "aws_instance" "jenkins_ec2" {
   }
 }
 
-resource "aws_eip" "jenkins_eip" {
-  domain = "vpc"
-  depends_on = [ aws_instance.jenkins_ec2 ]
-}
-
-resource "aws_eip_association" "jenkins_eip_association" {
-  instance_id = aws_instance.jenkins_ec2.id
-  allocation_id = aws_eip.jenkins_eip.id
-}

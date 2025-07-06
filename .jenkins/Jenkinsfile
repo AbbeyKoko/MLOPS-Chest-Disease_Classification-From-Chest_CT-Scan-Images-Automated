@@ -96,6 +96,7 @@ pipeline {
         echo "Deploying to EC2 using Ansible group_vars..."
         sshagent(["ssh_key"]) {
           sh '''
+            export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
             ANSIBLE_HOST_KEY_CHECKING=False \
             ansible-playbook -i inventory.ini deploy_mlops.yml --vault-password-file vault_pass.txt
           '''
